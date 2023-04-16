@@ -5,14 +5,18 @@ import { SessionProvider } from "next-auth/react";
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
+import Container from "~/components/Container";
+import LoggedOutBanner from "~/components/LoggedOutBanner";
 
-const MyApp: AppType<{ session: Session | null }> = ({
-  Component,
-  pageProps: { session, ...pageProps },
-}) => {
+const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { session, ...pageProps } }) => {
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps} />
+      <Container>
+        <main>
+          <Component {...pageProps} />
+        </main>
+      </Container>
+      <LoggedOutBanner />
     </SessionProvider>
   );
 };

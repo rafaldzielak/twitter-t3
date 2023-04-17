@@ -40,4 +40,31 @@ export const tweetRouter = createTRPCRouter({
 
       return { tweets, nextCursor };
     }),
+  like: protectedProcedure.input(z.object({ tweetId: z.string() })).mutation(({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+    const { prisma } = ctx;
+    return prisma.like.create({
+      data: {
+        tweet: {
+          connect: {
+            id: input.tweetId,
+          },
+        },
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+    });
+  }),
+  unlike: protectedProcedure.input(z.object({ tweetId: z.string() })).mutation(({ ctx, input }) => {
+    const userId = ctx.session.user.id;
+    const { prisma } = ctx;
+    return prisma.like.delete({
+      where: {
+        tweetId_userId: { tweetId: input.tweetId, userId },
+      },
+    });
+  }),
 });

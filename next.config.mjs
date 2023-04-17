@@ -19,7 +19,7 @@ const config = {
     defaultLocale: "en",
   },
   images: {
-    domains: ["cloudflare-ipfs.com", "https://cdn.discordapp.com/embed/avatars/1.png"],
+    domains: ["cloudflare-ipfs.com", "cdn.discordapp.com"],
   },
 };
 export default config;

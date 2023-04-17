@@ -1,10 +1,11 @@
 import Image from "next/image";
-import React, { type FC } from "react";
+import React, { useEffect, type FC } from "react";
 import { api, type RouterOutputs } from "~/utils/api";
 import { CreateTweet } from "./CreateTweet";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
 import dayjs from "dayjs";
+import useScrollPosition from "~/hooks/useScrollPosition";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -51,16 +52,27 @@ const Tweet: FC<TweetProps> = ({ tweet }) => {
 };
 
 const Timeline = () => {
-  const { data } = api.tweet.timeline.useQuery({ limit: 10 });
+  const { data, hasNextPage, fetchNextPage, isFetching } = api.tweet.timeline.useInfiniteQuery(
+    { limit: 10 },
+    { getNextPageParam: (lastPage) => lastPage.nextCursor }
+  );
+  const { scrollPosition } = useScrollPosition();
+
+  const tweets = data?.pages.flatMap((page) => page.tweets) ?? [];
+
+  useEffect(() => {
+    if (scrollPosition > 90 && hasNextPage && !isFetching) void fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetching, scrollPosition]);
 
   return (
     <div>
       <CreateTweet />
       <div className="border-l-2 border-r-2 border-t-2 border-gray-500">
-        {data?.tweets.map((tweet) => (
+        {tweets.map((tweet) => (
           <Tweet tweet={tweet} key={tweet.id} />
         ))}
       </div>
+      {!hasNextPage && <p>No more items to load</p>}
     </div>
   );
 };

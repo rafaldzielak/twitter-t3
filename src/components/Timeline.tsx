@@ -6,6 +6,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
 import dayjs from "dayjs";
 import useScrollPosition from "~/hooks/useScrollPosition";
+import { AiFillHeart } from "react-icons/ai";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -33,6 +34,10 @@ type TweetProps = {
 };
 
 const Tweet: FC<TweetProps> = ({ tweet }) => {
+  const likeMutation = api.tweet.like.useMutation().mutateAsync;
+  const unlikeMutation = api.tweet.unlike.useMutation().mutateAsync;
+
+  const hasLiked = tweet.likes.length > 0;
   return (
     <div className="mb-4 border-b-2 border-gray-500">
       <div className="flex p-2">
@@ -46,6 +51,17 @@ const Tweet: FC<TweetProps> = ({ tweet }) => {
           </div>
           <div>{tweet.text}</div>
         </div>
+      </div>
+      <div className="mt-4 flex items-center p-2">
+        <AiFillHeart
+          onClick={() => {
+            if (hasLiked) void unlikeMutation({ tweetId: tweet.id });
+            else void likeMutation({ tweetId: tweet.id });
+          }}
+          size="1.5rem"
+          color={hasLiked ? "red" : "grey"}
+        />
+        <span className="text-sm text-gray-500">10</span>
       </div>
     </div>
   );

@@ -26,11 +26,15 @@ export const tweetRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { prisma } = ctx;
       const { limit, cursor } = input;
+      const userId = ctx.session?.user.id;
       const tweets = await prisma.tweet.findMany({
         take: limit + 1,
         orderBy: [{ createdAt: "desc" }],
         cursor: cursor ? { id: cursor } : undefined,
-        include: { author: { select: { name: true, image: true, id: true } } },
+        include: {
+          author: { select: { name: true, image: true, id: true } },
+          likes: { where: { userId }, select: { userId: true } },
+        },
       });
       let nextCursor: typeof cursor | undefined = undefined;
       if (tweets.length > limit) {

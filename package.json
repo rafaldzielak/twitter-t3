@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
+    "@tanstack/react-query-devtools": "^4.29.3",
     "@types/eslint": "^8.21.3",
     "@types/node": "^18.15.5",
     "@types/prettier": "^2.7.2",

@@ -1,6 +1,7 @@
 import { type AppType } from "next/app";
 import { type Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { api } from "~/utils/api";
 
@@ -17,6 +18,7 @@ const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { s
         </main>
       </Container>
       <LoggedOutBanner />
+      <ReactQueryDevtools initialIsOpen={false} />
     </SessionProvider>
   );
 };

@@ -7,7 +7,7 @@ import updateLocal from "dayjs/plugin/updateLocale";
 import dayjs from "dayjs";
 import useScrollPosition from "~/hooks/useScrollPosition";
 import { AiFillHeart } from "react-icons/ai";
-import { InfiniteData, QueryClient, useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, type QueryClient, useQueryClient } from "@tanstack/react-query";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
@@ -45,10 +45,17 @@ const updateCache = ({ client, variables, data, action }: UpdateCacheArgs) => {
   client.setQueryData([["tweet", "timeline"], { input: { limit: 10 }, type: "infinite" }], (oldData) => {
     console.log(oldData);
     const newData = oldData as InfiniteData<RouterOutputs["tweet"]["timeline"]>;
+
+    const value = action === "like" ? 1 : -1;
     const newTweets = newData.pages.map((page) => {
       return {
         tweets: page.tweets.map((tweet) => {
-          if (tweet.id === variables.tweetId) return { ...tweet, likes: action === "like" ? [data.userId] : [] };
+          if (tweet.id === variables.tweetId)
+            return {
+              ...tweet,
+              likes: action === "like" ? [data.userId] : [],
+              _count: { likes: tweet._count.likes + value },
+            };
           return tweet;
         }),
       };
@@ -97,7 +104,7 @@ const Tweet: FC<TweetProps> = ({ tweet, client }) => {
           size="1.5rem"
           color={hasLiked ? "red" : "grey"}
         />
-        <span className="text-sm text-gray-500">10</span>
+        <span className="text-sm text-gray-500">{tweet._count.likes}</span>
       </div>
     </div>
   );

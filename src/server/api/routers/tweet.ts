@@ -34,6 +34,7 @@ export const tweetRouter = createTRPCRouter({
         include: {
           author: { select: { name: true, image: true, id: true } },
           likes: { where: { userId }, select: { userId: true } },
+          _count: { select: { likes: true } },
         },
       });
       let nextCursor: typeof cursor | undefined = undefined;

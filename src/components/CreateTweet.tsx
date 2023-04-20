@@ -10,7 +10,14 @@ export const CreateTweet = () => {
   const [text, setText] = useState("");
   const [error, setError] = useState("");
 
-  const { mutateAsync } = api.tweet.create.useMutation();
+  const { mutateAsync } = api.tweet.create.useMutation({
+    onSuccess: () => {
+      setText("");
+      void utils.tweet.timeline.invalidate();
+    },
+  });
+
+  const utils = api.useContext();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,7 +37,7 @@ export const CreateTweet = () => {
       <form onSubmit={handleSubmit} className="rounder-md mb-4 flex w-full flex-col border-2 p-4">
         <textarea onChange={(e) => setText(e.target.value)} className="w-full p-4 shadow"></textarea>
         <div className="mt-4 flex justify-end">
-          <button type="submit" className="bg-primary rounded-md px-4 py-2 text-white">
+          <button type="submit" className="rounded-md bg-primary px-4 py-2 text-white">
             Tweet
           </button>
         </div>

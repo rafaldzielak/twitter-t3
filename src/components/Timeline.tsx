@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React, { useEffect, type FC } from "react";
-import { api, type RouterOutputs } from "~/utils/api";
+import { api, RouterInputs, type RouterOutputs } from "~/utils/api";
 import { CreateTweet } from "./CreateTweet";
 import relativeTime from "dayjs/plugin/relativeTime";
 import updateLocal from "dayjs/plugin/updateLocale";
@@ -8,9 +8,12 @@ import dayjs from "dayjs";
 import useScrollPosition from "~/hooks/useScrollPosition";
 import { AiFillHeart } from "react-icons/ai";
 import { type InfiniteData, type QueryClient, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 
 dayjs.extend(relativeTime);
 dayjs.extend(updateLocal);
+
+const LIMIT = 10;
 
 dayjs.updateLocale("en", {
   relativeTime: {
@@ -39,10 +42,11 @@ type UpdateCacheArgs = {
     userId: string;
   };
   action: "like" | "unlike";
+  input: RouterInputs["tweet"]["timeline"];
 };
 
-const updateCache = ({ client, variables, data, action }: UpdateCacheArgs) => {
-  client.setQueryData([["tweet", "timeline"], { input: { limit: 10 }, type: "infinite" }], (oldData) => {
+const updateCache = ({ client, variables, data, action, input }: UpdateCacheArgs) => {
+  client.setQueryData([["tweet", "timeline"], { input, type: "infinite" }], (oldData) => {
     console.log(oldData);
     const newData = oldData as InfiniteData<RouterOutputs["tweet"]["timeline"]>;
 
@@ -70,14 +74,15 @@ const updateCache = ({ client, variables, data, action }: UpdateCacheArgs) => {
 type TweetProps = {
   tweet: RouterOutputs["tweet"]["timeline"]["tweets"][number];
   client: QueryClient;
+  input: RouterInputs["tweet"]["timeline"];
 };
 
-const Tweet: FC<TweetProps> = ({ tweet, client }) => {
+const Tweet: FC<TweetProps> = ({ tweet, client, input }) => {
   const likeMutation = api.tweet.like.useMutation({
-    onSuccess: (data, variables) => updateCache({ client, data, variables, action: "like" }),
+    onSuccess: (data, variables) => updateCache({ client, data, variables, action: "like", input }),
   }).mutateAsync;
   const unlikeMutation = api.tweet.unlike.useMutation({
-    onSuccess: (data, variables) => updateCache({ client, data, variables, action: "unlike" }),
+    onSuccess: (data, variables) => updateCache({ client, data, variables, action: "unlike", input }),
   }).mutateAsync;
 
   const hasLiked = tweet.likes.length > 0;
@@ -89,7 +94,7 @@ const Tweet: FC<TweetProps> = ({ tweet, client }) => {
         )}
         <div className="ml-2">
           <div className="align-center flex">
-            <p className="font-bold">{tweet.author.name}</p>
+            <p className="font-bold">{tweet.author.name && <Link href={`/${tweet.author.name}`}>{tweet.author.name}</Link>}</p>
             <p className="text-sm text-gray-500"> - {dayjs(tweet.createdAt).fromNow()}</p>
           </div>
           <div>{tweet.text}</div>
@@ -110,9 +115,13 @@ const Tweet: FC<TweetProps> = ({ tweet, client }) => {
   );
 };
 
-const Timeline = () => {
+type TimelineProps = {
+  where?: RouterInputs["tweet"]["timeline"]["where"];
+};
+
+const Timeline: FC<TimelineProps> = ({ where = {} }) => {
   const { data, hasNextPage, fetchNextPage, isFetching } = api.tweet.timeline.useInfiniteQuery(
-    { limit: 10 },
+    { limit: LIMIT, where },
     { getNextPageParam: (lastPage) => lastPage.nextCursor }
   );
   const { scrollPosition } = useScrollPosition();
@@ -130,7 +139,7 @@ const Timeline = () => {
       <CreateTweet />
       <div className="border-l-2 border-r-2 border-t-2 border-gray-500">
         {tweets.map((tweet) => (
-          <Tweet tweet={tweet} key={tweet.id} client={client} />
+          <Tweet tweet={tweet} key={tweet.id} client={client} input={{ limit: LIMIT, where }} />
         ))}
       </div>
       {!hasNextPage && <p>No more items to load</p>}
